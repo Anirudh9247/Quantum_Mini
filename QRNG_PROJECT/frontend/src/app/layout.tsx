@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import { ClientParticleBackground } from '@/components/ClientParticleBackground';
+import { Analytics } from '@vercel/analytics/next';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
         <div className="relative z-10 w-full">
           {children}
         </div>
+        <Analytics />
       </body>
     </html>
   );
