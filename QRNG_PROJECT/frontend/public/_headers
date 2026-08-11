@@ -1,7 +1,14 @@
 # Cloudflare Pages — HTTP Security Headers
-# Applied at the CDN edge for ALL responses.
-# Replace CLOUD_RUN_URL with your actual Cloud Run service URL before deploying.
+# Applied at the CDN edge. Replace CLOUD_RUN_URL with your actual Cloud Run URL.
 # Docs: https://developers.cloudflare.com/pages/configuration/headers/
+#
+# CSP NOTES:
+#   - 'unsafe-inline' required for style-src: Next.js injects inline critical CSS
+#   - 'unsafe-eval' required for script-src: webpack runtime uses eval() in dev;
+#     Remove it after verifying production works without it.
+#   - font-src includes data: for Geist font data URIs
+#   - connect-src: restrict to ONLY your Cloud Run domain in production
+#   - worker-src blob: required for Three.js WebGL workers
 
 /*
   X-DNS-Prefetch-Control: on
@@ -10,4 +17,4 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://CLOUD_RUN_URL https:; worker-src 'self' blob:; frame-ancestors 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://CLOUD_RUN_URL; worker-src 'self' blob:; frame-ancestors 'none';
