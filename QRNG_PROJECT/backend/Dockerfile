@@ -35,8 +35,8 @@ COPY . .
 # Create the static/plots directory (matplotlib saves plots here)
 RUN mkdir -p static/plots
 
-# Expose port
-EXPOSE 8000
+# Cloud Run injects PORT env var (default 8080); local dev fallback to 8000
+EXPOSE 8080
 
-# Start with uvicorn using the mapped PORT from Render
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Start uvicorn — Cloud Run sets $PORT to 8080 automatically
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}

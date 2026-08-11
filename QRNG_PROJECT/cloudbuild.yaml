@@ -1,0 +1,48 @@
+steps:
+  # ── Step 1: Build the Docker image ─────────────────────────────────────────
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - "-t"
+      - "gcr.io/$PROJECT_ID/qrng-api:$COMMIT_SHA"
+      - "-t"
+      - "gcr.io/$PROJECT_ID/qrng-api:latest"
+      - "-f"
+      - "backend/Dockerfile"
+      - "backend"
+
+  # ── Step 2: Push image to Container Registry ────────────────────────────────
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - push
+      - "gcr.io/$PROJECT_ID/qrng-api:$COMMIT_SHA"
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - push
+      - "gcr.io/$PROJECT_ID/qrng-api:latest"
+
+  # ── Step 3: Deploy to Cloud Run ─────────────────────────────────────────────
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - qrng-api
+      - "--image=gcr.io/$PROJECT_ID/qrng-api:$COMMIT_SHA"
+      - "--region=us-central1"
+      - "--platform=managed"
+      - "--allow-unauthenticated"
+      - "--memory=2Gi"
+      - "--cpu=2"
+      - "--timeout=120"
+      - "--max-instances=3"
+      - "--set-secrets=DATABASE_URL=qrng-database-url:latest,ALLOWED_ORIGINS=qrng-allowed-origins:latest"
+      - "--port=8080"
+
+images:
+  - "gcr.io/$PROJECT_ID/qrng-api:$COMMIT_SHA"
+  - "gcr.io/$PROJECT_ID/qrng-api:latest"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,44 @@
+# Cloud Run Service Configuration
+# Deploy with: gcloud run services replace cloudrun-service.yaml --region=us-central1
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: qrng-api
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # Scale to zero when idle (cost-efficient)
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        # Extended timeout for Qiskit Aer circuit simulations
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      # Allow 120s for heavy quantum state vector computations
+      timeoutSeconds: 120
+      containerConcurrency: 80
+      containers:
+        - image: gcr.io/PROJECT_ID/qrng-api:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              # Qiskit Aer needs headroom for matrix math
+              memory: "2Gi"
+              cpu: "2"
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: qrng-database-url
+                  key: latest
+            - name: ALLOWED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  name: qrng-allowed-origins
+                  key: latest
