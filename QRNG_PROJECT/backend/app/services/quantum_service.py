@@ -1,5 +1,7 @@
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
+import requests
+from typing import Tuple
 
 MAX_QUBITS = 24
 
@@ -18,10 +20,10 @@ def _generate_batch(size: int) -> str:
 
     bitstring = list(counts.keys())[0]
 
-    # ✅ Fix 1: strip spaces Qiskit inserts for readability
+    # ✅ Strip spaces Qiskit inserts for readability
     bitstring = bitstring.replace(" ", "")
 
-    # ✅ Fix 2: reverse to get big-endian (qubit 0 = leftmost bit)
+    # ✅ Reverse to get big-endian (qubit 0 = leftmost bit)
     bitstring = bitstring[::-1]
 
     return bitstring
@@ -38,21 +40,29 @@ def generate_qubits(sample_size: int) -> str:
     # ✅ Trim to exact size in case last batch overshot
     return bits[:sample_size]
 
-import requests
 
-def generate_real_quantum_bits(n_bits: int) -> str:
+def generate_real_quantum_bits(n_bits: int) -> Tuple[str, bool]:
+    """
+    Fetches physical quantum random bits from ANU QRNG API.
+    If the API is unavailable or times out, falls back to Qiskit Aer quantum simulator
+    and returns (bitstring, is_simulated_fallback=True).
+    """
     try:
         url = f"https://qrng.anu.edu.au/API/jsonI.php?length={n_bits}&type=uint8"
-        response = requests.get(url, timeout=10)
-        data = response.json()["data"]
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json().get("data", [])
+
+        if not data:
+            raise ValueError("Empty response data from ANU QRNG API")
 
         # Convert numbers → binary bits
         bits = ''.join(format(num, '08b') for num in data)
 
-        return bits[:n_bits]
+        return bits[:n_bits], False
 
     except Exception as e:
-        print("QRNG API failed:", e)
-
-        # fallback (IMPORTANT)
-        return "0" * n_bits
+        print(f"[QRNG Service Warning] ANU Physical QRNG API unavailable ({e}). Falling back to Qiskit Aer simulator.")
+        # Fallback to Qiskit Aer Simulator
+        fallback_bits = generate_qubits(n_bits)
+        return fallback_bits, True
