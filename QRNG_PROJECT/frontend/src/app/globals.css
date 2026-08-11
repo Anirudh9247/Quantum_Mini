@@ -8,14 +8,12 @@
 }
 
 body {
-  background-color: var(--color-background);
+  background-color: #020617;
   background-image: 
-    linear-gradient(to bottom, rgba(2, 6, 23, 0.5), rgba(2, 6, 23, 0.95)),
-    url('/bg-quantum.png');
-  background-size: cover;
-  background-position: center;
+    radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(157, 78, 221, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(2, 6, 23, 0.95) 0%, rgba(2, 6, 23, 1) 100%);
   background-attachment: fixed;
-  background-repeat: no-repeat;
   color: var(--color-foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
@@ -23,15 +21,94 @@ body {
 
 @layer utilities {
   .glass-panel {
-    @apply bg-slate-900/40 backdrop-blur-md border border-slate-700/50 shadow-xl rounded-xl;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-radius: 0.85rem;
   }
   
+  .glass-panel-glow {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.15), inset 0 0 15px rgba(6, 182, 212, 0.05);
+    border-radius: 0.85rem;
+  }
+
+  .glass-panel-purple {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(157, 78, 221, 0.35);
+    box-shadow: 0 0 25px rgba(157, 78, 221, 0.15), inset 0 0 15px rgba(157, 78, 221, 0.05);
+    border-radius: 0.85rem;
+  }
+
   .neon-border {
-    @apply border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.3)];
+    border: 1px solid rgba(6, 182, 212, 0.6);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+  }
+
+  .neon-text-cyan {
+    color: #00f0ff;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+  }
+
+  .neon-text-purple {
+    color: #c084fc;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.6);
   }
   
   .subtle-glow {
-    @apply drop-shadow-[0_0_8px_rgba(34,211,238,0.4)];
+    filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.4));
+  }
+
+  .quantum-pulse {
+    animation: quantumPulse 3s infinite ease-in-out;
+  }
+
+  .quantum-wave {
+    background: linear-gradient(90deg, #00f0ff, #9d4edd, #00f5d4, #00f0ff);
+    background-size: 300% 100%;
+    animation: waveShift 6s ease infinite;
   }
 }
 
+@keyframes quantumPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+    border-color: rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(157, 78, 221, 0.4);
+    border-color: rgba(157, 78, 221, 0.6);
+  }
+}
+
+@keyframes waveShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.7);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.6);
+}

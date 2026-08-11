@@ -1,7 +1,7 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { InteractiveParticleBackground } from '@/components/InteractiveParticleBackground';
 
-export const ClientParticleBackground = dynamic(() => import('@/components/ParticleBackground'), {
-  ssr: false,
-});
+export function ClientParticleBackground() {
+  return <InteractiveParticleBackground />;
+}

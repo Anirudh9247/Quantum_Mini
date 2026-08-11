@@ -20,7 +20,7 @@ app = FastAPI(title="Secure QRNG API")
 
 @app.on_event("startup")
 def startup_event():
-    print("🚀 App started successfully")
+    print("[QRNG API] App started successfully")
 
 # --- CORS ---
 allowed_origins_env = os.getenv(
