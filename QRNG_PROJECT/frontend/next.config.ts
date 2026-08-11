@@ -34,7 +34,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // "export" generates a pure static site (HTML/CSS/JS) — correct for Cloudflare Pages.
+  // All routes in this project are ○ Static, so no Node.js server is needed.
+  output: "export",
+  // Disable Next.js image optimisation (requires a Node server; not available in static export).
+  // Images are served as-is via Cloudflare's edge CDN.
+  images: { unoptimized: true },
   async headers() {
     return [
       {
