@@ -1,0 +1,5 @@
+# Cloudflare Pages — SPA fallback routing
+# All unknown paths return /index.html (200 not 404) so Next.js client-side
+# router handles the URL. Required for Next.js static export deep links.
+
+/*    /index.html   200

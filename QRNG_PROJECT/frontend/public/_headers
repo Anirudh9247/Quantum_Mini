@@ -1,0 +1,13 @@
+# Cloudflare Pages — HTTP Security Headers
+# Applied at the CDN edge for ALL responses.
+# Replace CLOUD_RUN_URL with your actual Cloud Run service URL before deploying.
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-DNS-Prefetch-Control: on
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://CLOUD_RUN_URL https:; worker-src 'self' blob:; frame-ancestors 'none';
