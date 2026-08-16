@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+import logging
+
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.schema.analysis_schema import RandomnessRequest
@@ -17,6 +19,8 @@ from app.utils.randomness_tests import (
     frequency_test,
     entropy_test,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -44,17 +48,44 @@ async def analyze_randomness(data: RandomnessRequest):
             },
             "error": None
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("analyze_randomness failed")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "data": None, "error": str(e)}
+            content={"success": False, "data": None, "error": "Internal server error"}
         )
 
 
 @router.post("/run-experiment")
-def run_experiment_endpoint(generator: str, sample_size: int):
+async def run_experiment_endpoint(request: Request):
     try:
+        payload = {}
+        content_type = request.headers.get("content-type", "")
+        if "application/json" in content_type:
+            try:
+                payload = await request.json()
+            except Exception:
+                payload = {}
+
+        generator = payload.get("generator") if isinstance(payload, dict) else None
+        sample_size = payload.get("sample_size") if isinstance(payload, dict) else None
+
+        if generator is None:
+            generator = request.query_params.get("generator")
+        if sample_size is None:
+            sample_size = request.query_params.get("sample_size")
+
+        if generator is None or sample_size is None:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "data": None, "error": "Missing generator or sample_size"}
+            )
+
+        sample_size = int(sample_size)
+
         if generator == "quantum":
+            bits = generate_qubits(sample_size)
+        elif generator == "simulator":
             bits = generate_qubits(sample_size)
         elif generator == "classical":
             bits = generate_classical_bits(sample_size)
@@ -79,10 +110,11 @@ def run_experiment_endpoint(generator: str, sample_size: int):
             },
             "error": None
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("run_experiment_endpoint failed")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "data": None, "error": str(e)}
+            content={"success": False, "data": None, "error": "Internal server error"}
         )
 
 
@@ -112,11 +144,12 @@ def run_experiment_db(
             "data": result,
             "error": None
         }
-    except Exception as e:
+    except Exception:
         db.rollback()
+        logger.exception("run_experiment_db failed")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "data": None, "error": str(e)}
+            content={"success": False, "data": None, "error": "Internal server error"}
         )
 
 @router.get("/experiments")
@@ -128,10 +161,11 @@ def get_experiments(db: Session = Depends(get_db)):
             "data": experiments,
             "error": None
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("get_experiments failed")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "data": None, "error": str(e)}
+            content={"success": False, "data": None, "error": "Internal server error"}
         )
 
 @router.get("/experiment/{experiment_id}")
@@ -152,8 +186,9 @@ def get_experiment(experiment_id: int, db: Session = Depends(get_db)):
             "data": experiment,
             "error": None
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("get_experiment failed")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "data": None, "error": str(e)}
+            content={"success": False, "data": None, "error": "Internal server error"}
         )

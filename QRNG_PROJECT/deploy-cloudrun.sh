@@ -35,13 +35,12 @@ gcloud run deploy "${SERVICE_NAME}" \
   --image="${IMAGE}:latest" \
   --region="${REGION}" \
   --platform=managed \
-  --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
   --timeout=120 \
   --max-instances=3 \
   --port=8080 \
-  --set-secrets="DATABASE_URL=qrng-database-url:latest,ALLOWED_ORIGINS=qrng-allowed-origins:latest"
+  --set-secrets="DATABASE_URL=qrng-database-url:latest,ALLOWED_ORIGINS=qrng-allowed-origins:latest,API_KEY=qrng-api-key:latest"
 
 echo ""
 echo "✅ Deployment complete!"
