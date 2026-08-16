@@ -1,5 +1,6 @@
 import logging
 import os
+import secrets
 
 import matplotlib
 from dotenv import load_dotenv
@@ -24,29 +25,56 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Secure QRNG API")
 API_KEY = os.getenv("API_KEY")
+PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc"}
+
+
+def require_api_key() -> bool:
+    env_name = os.getenv("ENVIRONMENT", "").strip().lower()
+    require_flag = os.getenv("REQUIRE_API_KEY", "").strip().lower()
+    return (
+        require_flag in {"1", "true", "yes", "on"}
+        or env_name == "production"
+        or bool(os.getenv("K_SERVICE"))
+    )
+
+
+def get_api_token(request: Request) -> str | None:
+    header_key = request.headers.get("x-api-key")
+    bearer = request.headers.get("authorization", "")
+
+    if bearer.startswith("Bearer "):
+        return bearer.split(" ", 1)[1].strip()
+    if header_key:
+        return header_key.strip()
+    return None
 
 
 @app.middleware("http")
 async def enforce_api_key(request: Request, call_next):
-    if request.url.path in {"/health", "/"}:
+    if request.method == "OPTIONS":
         return await call_next(request)
 
-    if API_KEY:
-        header_key = request.headers.get("x-api-key")
-        bearer = request.headers.get("authorization", "")
-        token = None
+    path = request.url.path
+    if path in PUBLIC_PATHS or path.startswith("/static"):
+        return await call_next(request)
 
-        if bearer.startswith("Bearer "):
-            token = bearer.split(" ", 1)[1].strip()
-        elif header_key:
-            token = header_key.strip()
+    if not require_api_key() and not API_KEY:
+        return await call_next(request)
 
-        if token != API_KEY:
-            logger.warning("Blocked unauthorized API request to %s", request.url.path)
-            return JSONResponse(
-                status_code=401,
-                content={"success": False, "data": None, "error": "Unauthorized"},
-            )
+    if not API_KEY:
+        logger.warning("Blocked protected request because API_KEY is missing in a production-like environment: %s", path)
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "data": None, "error": "Unauthorized"},
+        )
+
+    token = get_api_token(request)
+    if not token or not secrets.compare_digest(token, API_KEY):
+        logger.warning("Blocked unauthorized API request to %s", path)
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "data": None, "error": "Unauthorized"},
+        )
 
     return await call_next(request)
 

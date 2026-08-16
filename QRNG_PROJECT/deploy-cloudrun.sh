@@ -35,6 +35,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --image="${IMAGE}:latest" \
   --region="${REGION}" \
   --platform=managed \
+  --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
   --timeout=120 \
