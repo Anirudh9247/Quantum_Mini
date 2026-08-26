@@ -34,6 +34,7 @@ services:
       PORT: "8080"
       DATABASE_URL: "postgresql+psycopg2://qrng_user:qrng_local_dev@db:5432/qrng_db"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      API_KEY: "qrng_dev_api_key"
     depends_on:
       db:
         condition: service_healthy
@@ -49,6 +50,7 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: "http://localhost:8080"
+      NEXT_PUBLIC_API_KEY: "qrng_dev_api_key"
     command: sh -c "npm install && npm run dev"
     depends_on:
       - backend

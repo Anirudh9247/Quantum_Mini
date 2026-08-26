@@ -14,6 +14,8 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGINS
         value: https://qrng-project.vercel.app,http://localhost:3000
+      - key: API_KEY
+        generateValue: true
     disk:
       name: qrng-data
       mountPath: /app/data

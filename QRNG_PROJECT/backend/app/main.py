@@ -18,20 +18,34 @@ from app.model.random_experiment import Base
 
 load_dotenv()
 
+import secrets
+
 logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Secure QRNG API")
-API_KEY = os.getenv("API_KEY")
+
+PUBLIC_PATHS = {"/health", "/", "/docs", "/openapi.json", "/redoc"}
 
 
 @app.middleware("http")
 async def enforce_api_key(request: Request, call_next):
-    if request.url.path in {"/health", "/"}:
+    # Allow CORS preflight requests
+    if request.method == "OPTIONS":
         return await call_next(request)
 
-    if API_KEY:
+    # Allow public endpoints and static assets
+    if request.url.path in PUBLIC_PATHS or request.url.path.startswith("/static"):
+        return await call_next(request)
+
+    api_key = os.getenv("API_KEY")
+    env = os.getenv("ENVIRONMENT", os.getenv("ENV", "development")).lower()
+    require_key = os.getenv("REQUIRE_API_KEY", "false").lower() in {"true", "1", "yes"}
+    is_production = env in {"production", "prod", "staging"} or os.getenv("K_SERVICE") is not None or require_key
+
+    # If API_KEY is set in environment, validate incoming credentials
+    if api_key:
         header_key = request.headers.get("x-api-key")
         bearer = request.headers.get("authorization", "")
         token = None
@@ -41,12 +55,21 @@ async def enforce_api_key(request: Request, call_next):
         elif header_key:
             token = header_key.strip()
 
-        if token != API_KEY:
+        if not token or not secrets.compare_digest(token, api_key):
             logger.warning("Blocked unauthorized API request to %s", request.url.path)
             return JSONResponse(
                 status_code=401,
                 content={"success": False, "data": None, "error": "Unauthorized"},
             )
+    elif is_production:
+        # Fail closed in production/staging if API_KEY is missing
+        logger.error("API_KEY is not configured in %s environment. Blocking request to %s", env, request.url.path)
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "data": None, "error": "Unauthorized - API key not configured"},
+        )
+    else:
+        logger.warning("Running without API_KEY in development mode for %s", request.url.path)
 
     return await call_next(request)
 

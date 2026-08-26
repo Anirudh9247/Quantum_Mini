@@ -42,3 +42,8 @@ spec:
                 secretKeyRef:
                   name: qrng-allowed-origins
                   key: latest
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: qrng-api-key
+                  key: latest
