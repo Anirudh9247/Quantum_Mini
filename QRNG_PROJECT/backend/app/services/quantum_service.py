@@ -1,32 +1,39 @@
 from qiskit import QuantumCircuit, transpile
-from qiskit_aer import AerSimulator
+from qiskit.quantum_info import Statevector
 import requests
+import logging
 from typing import Tuple
+
+logger = logging.getLogger(__name__)
 
 MAX_QUBITS = 24
 
-simulator = AerSimulator()
+simulator = None
+try:
+    from qiskit_aer import AerSimulator
+    simulator = AerSimulator()
+except Exception as exc:
+    logger.warning("Qiskit Aer simulator initialization failed (%s). Using Statevector fallback.", exc)
+    simulator = None
 
 
 def _generate_batch(size: int) -> str:
     qc = QuantumCircuit(size, size)
     qc.h(range(size))
-    qc.measure(range(size), range(size))
 
-    compiled = transpile(qc, simulator)
-    job = simulator.run(compiled, shots=1)
-    result = job.result()
-    counts = result.get_counts()
-
-    bitstring = list(counts.keys())[0]
-
-    # ✅ Strip spaces Qiskit inserts for readability
-    bitstring = bitstring.replace(" ", "")
-
-    # ✅ Reverse to get big-endian (qubit 0 = leftmost bit)
-    bitstring = bitstring[::-1]
-
-    return bitstring
+    if simulator is not None:
+        qc.measure(range(size), range(size))
+        compiled = transpile(qc, simulator)
+        job = simulator.run(compiled, shots=1)
+        result = job.result()
+        counts = result.get_counts()
+        bitstring = list(counts.keys())[0]
+        bitstring = bitstring.replace(" ", "")[::-1]
+        return bitstring
+    else:
+        sv = Statevector.from_instruction(qc)
+        sampled = sv.sample_memory(1)[0]
+        return str(sampled).replace(" ", "")[::-1]
 
 
 def generate_qubits(sample_size: int) -> str:

@@ -5,7 +5,9 @@ from app.utils.visualization import save_bit_distribution_plot, save_entropy_com
 
 
 def _to_bitstring(bits) -> str:
-    """Normalise any bit source (string or list) to a plain '0'/'1' string."""
+    """Normalise any bit source (string, tuple, or list) to a plain '0'/'1' string."""
+    if isinstance(bits, tuple):
+        bits = bits[0]
     if isinstance(bits, list):
         return "".join(str(b) for b in bits)
     return str(bits)
@@ -21,8 +23,9 @@ def run_randomness_analysis(bits):
 
 
 def run_experiment(generator: str, sample_size: int):
+    is_simulated_fallback = False
     if generator == "quantum":
-        raw = generate_real_quantum_bits(sample_size)
+        raw, is_simulated_fallback = generate_real_quantum_bits(sample_size)
     elif generator == "simulator":
         raw = generate_qubits(sample_size)
     else:
@@ -39,13 +42,14 @@ def run_experiment(generator: str, sample_size: int):
     plot_b64 = save_bit_distribution_plot(zeros, ones)
 
     return {
-        "generator":         generator,
-        "sample_size":       sample_size,
-        "zeros":             zeros,
-        "ones":              ones,
-        "entropy":           ent["entropy"],
-        "chi_square":        chi["chi_square"],
-        "distribution_plot": plot_b64,
+        "generator":             generator,
+        "sample_size":           sample_size,
+        "zeros":                 zeros,
+        "ones":                  ones,
+        "entropy":               ent["entropy"],
+        "chi_square":            chi["chi_square"],
+        "distribution_plot":     plot_b64,
+        "is_simulated_fallback": is_simulated_fallback,
     }
 
 
