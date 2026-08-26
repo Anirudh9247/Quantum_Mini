@@ -18,10 +18,9 @@ except Exception as exc:
 
 
 def _generate_batch(size: int) -> str:
-    qc = QuantumCircuit(size, size)
-    qc.h(range(size))
-
     if simulator is not None:
+        qc = QuantumCircuit(size, size)
+        qc.h(range(size))
         qc.measure(range(size), range(size))
         compiled = transpile(qc, simulator)
         job = simulator.run(compiled, shots=1)
@@ -31,16 +30,19 @@ def _generate_batch(size: int) -> str:
         bitstring = bitstring.replace(" ", "")[::-1]
         return bitstring
     else:
-        sv = Statevector.from_instruction(qc)
+        qc = QuantumCircuit(size)
+        qc.h(range(size))
+        sv = Statevector(qc)
         sampled = sv.sample_memory(1)[0]
         return str(sampled).replace(" ", "")[::-1]
 
 
 def generate_qubits(sample_size: int) -> str:
     bits = ""
+    max_batch = MAX_QUBITS if simulator is not None else 10
 
     while len(bits) < sample_size:
-        batch_size = min(MAX_QUBITS, sample_size - len(bits))
+        batch_size = min(max_batch, sample_size - len(bits))
         batch_bits = _generate_batch(batch_size)
         bits += batch_bits
 
