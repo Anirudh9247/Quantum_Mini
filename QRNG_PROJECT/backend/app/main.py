@@ -3,6 +3,7 @@ import os
 
 # pyrefly: ignore [missing-import]
 import matplotlib
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

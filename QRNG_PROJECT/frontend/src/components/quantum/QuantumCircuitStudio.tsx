@@ -203,11 +203,16 @@ export const QuantumCircuitStudio: React.FC<QuantumCircuitStudioProps> = ({ onSt
           </button>
 
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={() => {
+              if (!isPlaying && activeStep >= circuit.length) {
+                setActiveStep(0);
+              }
+              setIsPlaying(!isPlaying);
+            }}
             className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2"
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {isPlaying ? 'Pause' : 'Animate Execution'}
+            {isPlaying ? 'Pause' : activeStep >= circuit.length ? 'Replay Execution' : 'Animate Execution'}
           </button>
 
           <button
@@ -258,7 +263,10 @@ export const QuantumCircuitStudio: React.FC<QuantumCircuitStudioProps> = ({ onSt
               <div key={idx} className="relative z-10 flex items-center gap-3">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  onClick={() => setSelectedGateForMatrix(gateKey)}
+                  onClick={() => {
+                    setActiveStep(idx + 1);
+                    setSelectedGateForMatrix(gateKey);
+                  }}
                   className={`cursor-pointer px-4 py-3 rounded-lg border bg-gradient-to-br ${gate.color} text-white font-mono font-bold text-sm shadow-lg flex flex-col items-center justify-center transition-all ${
                     isCurrent ? 'ring-4 ring-cyan-400/60 scale-110 shadow-cyan-500/50' : 'opacity-90'
                   }`}
