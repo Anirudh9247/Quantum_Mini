@@ -1,6 +1,7 @@
 import logging
 import os
 
+# pyrefly: ignore [missing-import]
 import matplotlib
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
